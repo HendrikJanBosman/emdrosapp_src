@@ -13,13 +13,13 @@ are stored in the **emdrosapp_doc** repo.
 
 ## files
 
--- **emdros_application**: the Python 2.7 package providing all functionality for the programs listed below.
--- **template.py**: copy and edit this to write new Emdros-based applications.
--- **mqlc.py**: an interactive MQL query/command interpreter. 
--- **labelman.py**: a program to add descriptive labels to an Emdros database, based on 
+* **emdros_application**: the Python 2.7 package providing all functionality for the programs listed below.
+* **template.py**: copy and edit this to write new Emdros-based applications.
+* **mqlc.py**: an interactive MQL query/command interpreter. 
+* **labelman.py**: a program to add descriptive labels to an Emdros database, based on 
     user-supplied text patterns. These files are stored in the **lbl** directory of
     each main directory in the **emdrosapp_data** repo. 
--- **unitman.py**: a program to combine low level textual objects into ever larger textual
+* **unitman.py**: a program to combine low level textual objects into ever larger textual
     units.
 
 ## database kernels
@@ -32,17 +32,17 @@ Depending on the mode, the programs will work with different object types,
 use different labels and text patterns and produce different output layouts.
 At present, the modes are:
 
--- **graphical**: concerns the graphemes of which the text is built: capitalization, accents, interpunction, etc.
--- **lexical**: concerns word features derived from a lexicon, not from morphology or syntax.
--- **morphological**: concerns word features derived from morphology.
--- **syntactic**: concerns syntax and text syntax.
--- **participants**: concerns participant references and their relations.
--- **prosodic**: concerns phenomena connected to versification (cola, verselines, strophes, metre, alliteration, acrostic etc).
+* **graphical**: concerns the graphemes of which the text is built: capitalization, accents, interpunction, etc.
+* **lexical**: concerns word features derived from a lexicon, not from morphology or syntax.
+* **morphological**: concerns word features derived from morphology.
+* **syntactic**: concerns syntax and text syntax.
+* **participants**: concerns participant references and their relations.
+* **prosodic**: concerns phenomena connected to versification (cola, verselines, strophes, metre, alliteration, acrostic etc).
 
 ## installation and configuration
--- Emdros with Python support must be installed on your system (www.emdros.org).
--- At least one of the main directories in the **emdrosapp_data** repo must be present on your 
+* Emdros with Python support must be installed on your system (www.emdros.org).
+* At least one of the main directories in the **emdrosapp_data** repo must be present on your 
 system.
--- The file **config.py** in **emdros_application/syscfg** must be edited to match your system.
--- For each of these directories, a corresponding config file in 
+* The file **config.py** in **emdros_application/syscfg** must be edited to match your system.
+* For each of these directories, a corresponding config file in 
    **emdros_application/syscfg** must be created and/or edited to match your system.
