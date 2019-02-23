@@ -4,12 +4,11 @@ Conversion to Python 3 is in the planning, but will probably have
 to go together with a complete overhaul of the packages.
 
 ## depency on other repos
-In order to work, the programs in this repo assume the presence of
+* **emdrosapp_data**: In order to work, the programs in this repo assume the presence of
 the data and config files in at least one of the directories in 
-the **emdrosapp_data** repo.
+the emdrosapp_data repo.
 
-Detailed documentation on the programs, and on the modules in the **emdros_application** package 
-are stored in the **emdrosapp_doc** repo.
+* **emdrosapp_doc**: Detailed documentation on the programs, and on the modules in the **emdros_application** package.
 
 ## files
 
@@ -25,6 +24,13 @@ are stored in the **emdrosapp_doc** repo.
 ## database kernels
 All programs can work with various database families (having, e.g., different languages or database setups),
 which I call kernels. The kernel is specified with the -k option (default is bhebrew).
+At present, the following kernels are provided:
+* **bhebrew**: Biblical Hebrew databases derived from the ETCBC database. This repo presently only 
+contains **threni_hjb**, the database of the book of Lamentations used in my PhD research.
+* **oldenglish**: an experimental database of some Old English (Anglo-Saxon) documents.
+* **esperanto**: an experimental database of the book of Lamentations in Esperanto.
+
+The latter two have no linguistic pretention, but only serve to demonstrate the widely varying possibilities.
 
 ## linguistic modes
 All programs can work in a number of linguistic modes (specified with the -m option).
@@ -41,8 +47,6 @@ At present, the modes are:
 
 ## installation and configuration
 * Emdros with Python support must be installed on your system (www.emdros.org).
-* At least one of the main directories in the **emdrosapp_data** repo must be present on your 
-system.
 * The file **config.py** in **emdros_application/syscfg** must be edited to match your system.
-* For each of these directories, a corresponding config file in 
-   **emdros_application/syscfg** must be created and/or edited to match your system.
+* For every kernel you want to use, a corresponding directory from the **emdrosapp_data** repo must be present on your system.
+* For every kernel, a corresponding config file in **emdros_application/syscfg** must be created and/or edited to match your system.
