@@ -17,7 +17,7 @@ class Spinner:
 	self.i = 0
 
     def next(self):
-	self.outstream.write(self.pattern[self.i] + " ")
+	self.outstream.write("%s " % self.pattern[self.i])
 	self.outstream.flush()
 	self.outstream.write("\b\b")
 	time.sleep(self.delay)

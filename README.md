@@ -8,7 +8,7 @@ to go together with a complete overhaul of the packages.
 the data and config files in at least one of the directories in 
 the emdrosapp_data repo.
 
-* **emdrosapp_doc**: Detailed documentation on the programs, and on the modules in the **emdros_application** package.
+* **emdrosapp_doc** (under construction): Contains detailed documentation on the programs, and on the modules in the **emdros_application** package.
 
 ## files
 

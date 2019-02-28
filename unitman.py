@@ -36,13 +36,12 @@ class UnitManager(EmdrosApplication):
 		if not self.mql.createObjectType(o):
 		       raise Exception("mql.createObjecType(%s) failed." % o) 
 	    if not self.mql.enumExists('%s_%s_label_t' % (self.mode, o)):
-		DEBUG("CREATING ENUM %s_%s_label_t" % (self.mode, o))
 		self.mql.createEnum('%s_%s_label_t' % (self.mode, o), ('None',))
 	    if not self.mql.createObjectFeature(o, '%s_labels' % self.mode,
 						'LIST OF %s_%s_label_t' % (self.mode, o)):
 	       raise Exception("mql.createObjectFeature(%s) failed." % o) 
 	    else:
-		self.mql.doQuery("SELECT FEATURES FROM OBJECT TYPE [%s] GO" % o, True, True, True)
+		self.mql.doQuery("SELECT FEATURES FROM OBJECT TYPE [%s] GO" % o)
 
 
 	if not self.loadFromDatabase():
@@ -60,7 +59,7 @@ class UnitManager(EmdrosApplication):
 	    
 	self.statsFile = addPath('%s.%s.labelstats' % (self.database, self.mode), self.kernel.LBL_DIR)
 	self.stats = LabelStats(self.objectTypes, filename=self.statsFile)
-	self.syncStats(self.sheaf, loadfreqs=userAffirms("add stats from %s?" % self.statsFile))
+	self.syncStats(self.sheaf, loadfreqs=False) # loadfreqs=userAffirms("add stats from %s?" % self.statsFile))
 
 
 
@@ -403,8 +402,8 @@ class UnitManager(EmdrosApplication):
 	    elif choice == "l":
 		self.loadFromDatabase()
 	    elif choice == "q":
-		if userAffirms("save label statistics?"):
-		    self.save()
+		#if userAffirms("save label statistics?"):
+		    #self.save()
 		STOP = True
 	    else:
 		curr += 1
@@ -427,6 +426,7 @@ class UnitManager(EmdrosApplication):
 	    
     def clearAll(self):
 	DEBUG(self.objectTypes)
+	DEBUG('not implemented')
 
     def save(self):
 	import time
