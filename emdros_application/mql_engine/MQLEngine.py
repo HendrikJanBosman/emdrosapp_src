@@ -96,7 +96,7 @@ class MQLEngine:
 	 writeln("Domain for queries: %s" % self.domain,
 		     outstream=self.errstream)
 
-   def getEmdrosVersion(self, as_float):
+   def getEmdrosVersion(self, as_float=False):
       v_str = self.env.getEmdrosVersion()
       if as_float:
 	 v_str = re.sub("\.", "", v_str)
