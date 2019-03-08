@@ -3,6 +3,9 @@ Python 2.7 sources for my Emdros-based programs.
 Conversion to Python 3 is in the planning, but will probably have
 to go together with a complete overhaul of the packages.
 
+**The files in this repo are interdependent. The entire repo is to be
+present for the programs to work.**
+
 ## depency on other repos
 * **emdrosapp_data**: In order to work, the programs in this repo assume the presence of
 the data and config files in at least one of the directories in 
