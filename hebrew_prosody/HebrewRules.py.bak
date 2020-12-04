@@ -1,0 +1,407 @@
+from ConsonantBox import *
+from IOTools import *
+MatresLectionis = ('>', 'J', 'H', 'W')
+shortvowels = ('A', 'A:', 'E', 'E:', 'I', 'O', '@o', '@:','U')
+furtivevowels = ('@:', 'E:', 'A:')
+longvowels  = ('@', '@a', '@H', ';', ';J', 'IJ', 'OH', 'OW', 'W.')
+novowels = ('', 'qui')
+begadkefat  = ('B', 'G', 'D', 'K', 'P', 'T')
+
+
+
+def adaptAccents(word, g_word, monads, DUMMY_ACCENT="99", refMan=None, verbose=False, spin=None):
+
+    if not verbose and spin <> None:
+	spin.next()
+    # multiple accents
+    if re.search('[0-9][0-9].*0[35]', g_word):
+	g_word = re.sub('0[35]', '', g_word)
+    if re.search('[0-9][0-9].*[0-9][1-9]', g_word):
+	if refMan <> None:
+	    txtref = " (%s)" % refMan.getRef(monads.first())
+	    txtref = txtref.ljust(14, " ")
+	else:
+	    txtref = ''
+	if verbose:
+	    sys.stderr.write('warning%s: multiple accents in %s\n' % \
+							(txtref, g_word))
+
+    # qal perf 3fs: extra dummy accent in first syllable
+    if (word.features['vt'] == 'perf' and word.features['vs'] == 'qal'  and \
+	    word.features['ps'] == 'p3' and  word.features['nu'] == 'sg' and \
+	    word.features['gn'] == 'f') or \
+       (word.features['vt'] == 'perf' and word.features['vs'] == 'qal'  and \
+	    word.features['ps'] == 'p3' and word.features['nu'] == 'pl' and \
+	    re.search("^[>BGDHWZXVJKLMN<SPYQRFCT]@[>BGDHWZXVJKLMN<SPYQRFCT]:", g_word)):
+	if not re.search("^[>BGDHWZXVJKLMN<SPYQRFCT]@[0-9][0-9]", g_word):
+	    if verbose:
+		write('grammatical exception: ', outstream=sys.stderr)
+		write(g_word + " => ", outstream=sys.stderr)
+	    g_word = re.sub('@', '@%s' % DUMMY_ACCENT, g_word, 1)
+	    if verbose:
+		writeln(g_word, outstream=sys.stderr)
+
+    return g_word
+
+
+
+def doSyllables(cB, DUMMY_ACCENT='99', verbose=False, spin=None, line=None, linenr=None,
+		auto=False, txtref=None):
+    #from Manual import *
+
+    if not verbose and spin <> None:
+	spin.next()
+
+    # FIRST, GET PETUCHA AND SETUMA OUT OF THE WAY
+    if cB[-1].cons in ('S', 'P'):
+        if (len(cB) > 2) and (cB[-2].extra == '' or cB[-2].extra[-1] == '_'): 
+            cB[-2].extra += cB[-1].cons
+            cB = cB[:-1]
+
+	# VOCALIZE K/Q ACCORDING TO THE QERE
+
+    #if '*' in repr(cB):    # ketiv / qere: user provides vocalization
+	#try:
+	    #cB = repair_KQ(cB, line=line, linenr=linenr, verbose=verbose,
+		#spin=spin, auto=auto, txtref=txtref)
+	#except:
+	    #warning("Manual.repair_KQ() failed, for %s" % repr(cB))
+	    #pass
+    return doSyllableLoop(cB, DUMMY_ACCENT, verbose)
+
+
+
+def doSyllableLoop(cB, DUMMY_ACCENT='99', verbose=False, VERBOSE=False):
+
+    from ConsonantBox import ConsonantBox, ConsonantBoxList
+    from Syllable import Syllable
+    from sys import stderr
+
+    def mlWarning(vowel, const, word):
+	pass # NICE AND QUIET
+        #stderr.write('warning: rejected %s%s as mat. lect. in %s\n' % \
+                     #(vowel, const, word))
+    
+
+    ### KETIV QERE MARKER: MOVE TO A BOOLEAN VARIABLE
+    QERE = False
+    for c in cB:
+	if c.cons == '*':
+	    cB.remove(c)
+	    QERE = True
+
+
+    # START MAIN LOOP
+    verbose = False
+    i = 0
+    DONE = False
+
+
+    while not DONE:
+        currBox = cB[i]
+        if i > 0  :
+            prevBox = cB[i-1]
+        else:
+            prevBox = ConsonantBox()
+        if i < len(cB) - 1:
+            nextBox = cB[i+1]
+        else:
+            nextBox = ConsonantBox()
+        if verbose:
+            print ' in:', prevBox.dump()
+            print ' in:', currBox.dump()
+            print ' in:', nextBox.dump()
+        
+
+        ### TETRAGRAM
+
+        if (i <= len(cB)-4) and \
+                cB[i].cons == 'J' and cB[i+1].cons == 'H' and \
+                cB[i+2].cons == 'W' and cB[i+3].cons == 'H':
+            cB[i]   = ConsonantBox('J', acc=cB[i].acc)
+            cB[i+1] = ConsonantBox('H', acc=cB[i+1].acc, syll = True)
+            cB[i+2] = ConsonantBox('W', acc=cB[i+2].acc)
+            cB[i+3] = ConsonantBox('H', acc=cB[i+3].acc)
+            i += 3
+            currBox = cB[i]
+            if i > 0 : prevBox = cB[i-1]
+            if i < len(cB)-1: nextBox = cB[i+1]
+
+
+        #### MATER LECTIONIS: WAW
+
+        ## word-initial shureq:       
+        elif i == 0 and currBox.cons == 'W' and \
+                        currBox.dag == '.' and currBox.vow == '':
+            currBox.cons = ''
+            currBox.dag = ''
+            currBox.vow = 'W.'
+            
+        ## non-initial shureq                
+        elif currBox.vow == '' and \
+                        nextBox.cons == 'W' and \
+                        nextBox.dag=='.' and \
+                        nextBox.vow=='':
+                currBox.vow = 'W.'
+                currBox.extra += nextBox.extra
+                currBox.acc += nextBox.acc
+                prevBox.syll = True
+                if i < len(cB)-1:
+                    cB.remove(nextBox)
+                if i < len(cB)-1:
+                    nextBox = cB[i+1]
+                else:
+                    nextBox = ConsonantBox()   
+		
+            
+        ## -ayw ending
+        elif (i <= len(cB) - 3) and nextBox.cons == 'J' and nextBox.vow == '' \
+                                and cB[i+2].cons == 'W' and cB[i+2].dag == '' \
+                                and cB[i+2].vow == '':
+            if currBox.vow == '@':
+                nextBox.cons = 'JW'
+                if i > 0:
+                    prevBox.syll = True
+                currBox.syll = False
+                nextBox.syll = True
+                nextBox.extra = cB[i+2].extra
+                cB.remove(cB[i+2])
+
+        ## golem gadol
+        elif (i <= len(cB) - 1) and nextBox.cons == 'W' and nextBox.vow == '':
+            if currBox.vow == 'O':
+                currBox.vow += 'W'
+                currBox.extra += nextBox.extra
+                cB.remove(nextBox)
+                if i < len(cB) - 1:
+                    nextBox = cB[i+1]
+                else:
+                    nextBox = ConsonantBox()
+                if i > 0:
+                    prevBox.syll = True
+            elif currBox.vow not in ('', ':') and i < len(cB) - 2:
+				if VERBOSE:
+					stderr.write("unexpected vowel '%s' before mat. lect. '%s' in '%s'\n" % \
+                                    (currBox.vow, nextBox.cons, cB.repr(format='etcbc')))
+                
+     
+        #### MATER LECTIONIS: ALEF
+        elif (i < len(cB) - 1) and nextBox.cons == '>' and nextBox.vow=='':
+	    if (i < len(cB) - 2) and cB[i+2].cons == "W" and \
+				    cB[i+2].dag  == "." and \
+				    cB[i+2].vow  == '':
+		pass  # alef is no ML, but regular consonant for following shureq
+
+            elif currBox.vow in ('@', 'O', 'I', ';'):
+                currBox.vow += '>'
+                currBox.extra += nextBox.extra
+                cB.remove(nextBox)
+                if i < len(cB) - 1:
+                    nextBox = cB[i+1]
+                else:
+                    nextBox = ConsonantBox()
+                if i > 0:
+                    prevBox.syll = True
+            elif currBox.vow not in ('', ':') and i < len(cB) - 2:
+                mlWarning(currBox.vow, nextBox.cons, cB.repr(format='etcbc'))
+                
+        #### MATER LECTIONIS: YOD
+        elif (i < len(cB) - 1) and \
+                nextBox.cons == 'J' and nextBox.vow == '' and nextBox.dag == '':
+ 
+            if currBox.vow in ['I', ';', 'E']:
+                currBox.vow += 'J'
+                currBox.extra += nextBox.extra
+                #currBox.acc += currBox.acc
+                cB.remove(nextBox)
+                if i < len(cB) - 1:
+                    nextBox = cB[i+1]
+                else:
+                    nextBox = ConsonantBox()
+                if i > 0:
+                    prevBox.syll = True 
+            elif currBox.vow not in ('', ':') and i < len(cB) - 2:
+                mlWarning(currBox.vow, nextBox.cons,
+                               cB.repr(format='etcbc'))
+                
+        
+        #### HEH MAPPIQ: no extra rules, is treated as a regular consonant
+        elif (i < len(cB) - 1) and \
+                           nextBox.cons == 'H' and nextBox.dag == '.' and \
+                           nextBox.vow == '':
+             pass
+
+   
+        #### MATER LECTIONIS: HEH
+        elif (i < len(cB) - 1) and \
+                           nextBox.cons == 'H' and nextBox.dag == '' and \
+                           nextBox.vow == '':
+            if currBox.vow in ['@', '@a', ';', 'E', 'O']:
+                currBox.vow += 'H'
+                #currBox.acc += nextBox.acc
+                currBox.extra += nextBox.extra
+                cB.remove(nextBox)
+                if i < len(cB) - 1:
+                    nextBox = cB[i+1]
+                else:
+                    nextBox = ConsonantBox()
+                if i > 0:
+                    prevBox.syll = True
+            elif currBox.vow not in ('', ':') and i < len(cB) - 2:
+                mlWarning(currBox.vow, nextBox.cons,
+                               cB.repr(format='etcbc'))
+                
+        #### FURTIVE PATACH
+        if (i == len(cB) - 2) and (nextBox.cons in ['>', 'H', 'X', '<'])  and \
+                       currBox.vow <> '' and nextBox.vow == 'A' and nextBox.dag <> '.':
+            currBox.vow += 'a'
+            nextBox.vow = ''
+            if i > 0:
+                prevBox.syll = True
+            currBox.syll = False
+            nextBox.syll = True
+
+
+        #### DAGESH
+        if currBox.dag == '.':
+            
+            # 'dagesh' in word-final position; shva must be quiet
+            if (i == len(cB) -1 or ('&' in currBox.extra)) and currBox.vow == '':
+                currBox.dagesh = 'lene' #strictly speaking incorrect, but works
+
+            # true dagesh lene
+            elif currBox.cons in begadkefat:
+                if i == 0 or '&' in prevBox.extra:
+                    currBox.dag = 'lene'
+                elif prevBox.vow == 'qui' and currBox.vow <> '':
+                    currBox.dag = 'lene'
+                else:
+                    currBox.dag = 'forte'
+            # dagesh forte, always starts a new syllable
+            elif currBox.vow not in novowels:
+                currBox.dag = 'forte'
+
+            if currBox.dag == 'forte':
+                prevBox.double = currBox.cons
+                if currBox.cons in begadkefat:
+                    prevBox.dag = 'lene'
+                if i > 0:
+                    prevBox.syll = True
+
+
+        #### QAMATS
+        if currBox.vow == '@':
+            if currBox.acc <> '' :     # accent -> stressed syllable -> @a
+				       # except for K.@45L& (ad hoc hack!)
+		if currBox.cons == "K" and \
+		       nextBox.cons == "L" and \
+		       nextBox.vow in novowels and \
+		       '&' in nextBox.extra:
+		    currBox.vow = '@o'
+		    currBox.syll = False
+		    nextBox.syll = True
+		else: 
+		    currBox.vow = '@a'
+
+            elif i < len(cB) -1:
+                if nextBox.vow in [':@', '@:']:
+                    currBox.vow = '@o'
+                    currBox.syll = True
+                elif nextBox.vow == ':':
+                    currBox.vow = '@o'
+                    nextBox.vow = 'qui'
+                    currBox.syll = False
+                    nextBox.syll = True
+                elif nextBox.cons in ['>', 'H', 'X', '<'] :
+                    currBox.vow = '@a'
+                    currBox.syll = False
+                    nextBox.syll = True
+                elif nextBox.vow <> '':
+                    currBox.vow = '@a'
+                    currBox.syll = False
+                elif nextBox.extra == '&':
+                    currBox.vow = '@o'
+                    nextBox.syll = True
+
+            
+        #### SHEVA
+        if currBox.vow == ':':
+            if i == 0:
+                currBox.vow = 'mob'
+                currBox.syll = True 
+	    elif i == len(cB) - 1: # final consonant: always quiescens
+		currBox.vow = 'qui'
+		prevBox.syll = False
+		currBox.syll = True
+	    elif i == len(cB) - 2 and nextBox.vow in novowels:
+		currBox.vow = 'qui'
+		prevBox.syll = False
+		currBox.syll = False
+		nextBox.syll = True
+            else:
+                if currBox.dag == 'forte':
+                    currBox.vow = 'mob'
+                    currBox.syll = True
+                elif prevBox.extra == '&':
+                    currBox.vow = 'mob'
+                    currBox.syll = True
+                elif prevBox.vow in furtivevowels:
+                    currBox.vow = 'mob'
+                    currBox.syll = True
+                elif prevBox.vow in longvowels:
+                    currBox.vow = 'mob'
+                    currBox.syll = True
+                    prevBox.syll = True
+                elif prevBox.vow in shortvowels:
+                    currBox.vow = 'qui'
+                    currBox.syll = True
+                    prevBox.syll = False
+                elif prevBox.vow in ['mob', 'qui', ':', '']:
+                    currBox.vow = 'mob'
+                    currBox.syll = True
+                    prevBox.syll = True
+
+        # OPEN SYLLABLE
+        if (currBox.vow not in novowels):
+            if nextBox.vow not in novowels:
+                currBox.syll = True  
+
+        #### FINAL CONSONANT
+        if (i == len(cB) -2) and (nextBox.vow in ('',':','qui') or nextBox.extra in ("&","-")):
+                nextBox.vow = ""
+                nextBox.syll = True
+                currBox.syll = False
+
+
+
+        #### LAST CONSONANTBOX OF WORD(COMPLEX): ALWAYS END OF SYLLABLE
+        if i == len(cB) -1 or currBox.extra in ('&', '-'):
+            currBox.syll = True
+            if currBox.vow in (':', 'qui', ''):
+                prevBox.syll = False
+            
+        # ADVANCE COUNTER, CHECK LOOP CONDITION
+        if verbose:
+            print 'out:', prevBox.dump()
+            print 'out:', currBox.dump()
+            print 'out:', nextBox.dump()
+            print
+        
+        i += 1
+        if i >= len(cB):
+            DONE = True
+
+    # WRAPUP: CREATE THE ACTUAL SYLLABLES
+    syllables = []
+    currsyll  = ConsonantBoxList()
+    if QERE:
+	currsyll.append(ConsonantBox())
+	currsyll[0].cons = '*'
+    for c in cB:
+        currsyll.append(c)
+        if c.syll:  # end of syllable
+            syllables.append(Syllable(currsyll))
+            currsyll = ConsonantBoxList()
+    return syllables
+
+                

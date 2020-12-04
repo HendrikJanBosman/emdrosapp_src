@@ -1,0 +1,150 @@
+from Paths import *
+from MQLEngine import *
+from Configuration import *
+from Syllable import *
+from IOTools import *
+
+class WordCluster:
+
+    def __init__(self):
+	self.words = [] # items: [monads, g_word, g_suffix, g_word_utf8, g_suffix_utf8]
+	self.monads = SetOfMonads()
+	self.utf8HebText = ""
+
+    def __getitem__(self, k):
+	return self.words[k]
+
+    def append(self, w):
+	self.words.append(w)
+	self.monads.unionWith(w[0])
+	self.utf8HebText += w[3] + w[4]
+
+    def finalize(self, verbose=False, spinner=None):
+	self.consonantBoxes = ConsonantBoxList(self.flatText())
+	DEBUG("aap")
+	DEBUG(self.consonantBoxes)
+	self.syllables = SyllableList(self.flatText(), verbose=verbose)
+	self.noOfSyllables = len(self.syllables)
+	self.no_of_syllables =  self.noOfSyllables
+	self.noOfStresses    = self.syllables.noOfStresses
+	self.no_of_stresses  = self.noOfStresses
+
+	self.g_suffix = self.words[-1][2]
+	if self.g_suffix == "&":
+	    self.g_suffix_utf8 = self.words[-1][4]
+	else:
+	    self.g_suffix = " "
+	if verbose:
+	    print(self.flatText() + '\t' + self.repr())
+	elif spinner:
+	    spinner.next()
+    
+
+    def flatText(self):
+	rep = ""
+	for w in self.words:
+	    rep = rep + w[1] + w[2] 
+	    if w[2] == '':
+		rep += ''     # wordsep should be empty; extra '-' suffices
+	return rep
+
+
+    def __repr__(self):
+	return self.repr()
+
+    def g_sfx(self, format='ascii'):
+	return self.g_suffix
+
+    def repr(self, format='etcbc', sep='/', wordsep='', markstress=True, sfx=True):
+	if format == 'utf8_heb':
+	    return self.utf8HebText
+
+	rep = self.syllables.repr(format=format, sep=sep, wordsep=wordsep,
+					markstress=markstress, sfx=False)
+	if sfx and self.g_suffix <> ' ':
+	    rep += self.g_suffix
+	return rep
+
+
+
+
+class WordClusterList:
+    
+    def __init__(self, mql, monads, KQVocs, verbose=False, store=True):
+
+	spinner = Spinner()
+	self.flatList = []
+	self.wordClusters = []
+	self.no_of_syllables = 0
+	self.no_of_stresses = 0
+	q = "SELECT ALL OBJECTS IN %s WHERE [word get g_word, qere, qere_utf8, g_suffix, g_word_utf8, g_suffix_utf8, vt, vs, ps, nu, gn] GO" % monads.toString()
+	if mql.doQuery(q):
+	    sheaf = mql.getPySheaf()
+	    for straw in mql.getPySheaf():
+		if spinner:
+		    spinner.next()
+		for word in straw:
+			g_word      = word.features["g_word"]
+			g_word_utf8 = word.features["g_word_utf8"]
+			g_suffix      = suffix.features["g_suffix"]
+			g_suffix_utf8 = suffix.features["g_suffix_utf8"]
+
+			g_word = adaptAccents(word) # lives in HebrewRules
+
+			if word.features["qere"] <> "":
+				if verbose:
+				    writeln("K/Q: %s => [%s]" % (g_word, word.features["qere"]))
+				g_word = "*" + word.features["qere"]
+				g_word_utf8 = word.features["qere_utf8"]
+
+			self.flatList.append([word.monads,
+			      g_word, g_suffix, g_word_utf8, g_suffix_utf8])
+
+	    curr = WordCluster()
+	    for word in self.flatList:
+		curr.append(word)
+		if len(word[2]) > 0 and (' ' in word[2] or "&" in word[2]):
+		    curr.finalize(verbose=verbose, spinner=spinner)
+		    if store:
+			self.wordClusters.append(curr)
+		    else:
+			print curr
+		    curr = WordCluster()
+
+    def __getitem__(self, k):
+	return self.wordClusters[k]
+	
+    def append(self, wc):
+	self.wordClusters.append(wc)
+	self.no_of_syllables += wc.no_of_syllables
+	self.no_of_stresses += wc.no_of_stresses
+
+    def __repr__(self):
+	return repr(self.wordClusters)
+
+
+    def __tablerepr__(self):
+	rep = ""
+	for wc in self.wordClusters:
+	    rep += "%s |%s|\n" % (wc.monads.toString().ljust(20), repr(wc)) 
+	return rep
+
+
+    def text(self):
+	rep = ""
+	for wc in self.wordClusters:
+	    rep += repr(wc)
+	return rep
+
+
+if __name__ == "__main__":
+    mql = MQLEngine(database="threni_hjb", usr="hjb", pwd="none")
+
+    q = "SELECT ALL OBJECTS WHERE [verse] GO"
+    if mql.doQuery(q):
+	for straw in mql.getPySheaf():
+	    for verse in straw:
+		wcl = WordClusterList(mql, verse.monads, KQVocs)
+		for wc in wcl:
+		    print wc.consonantBoxes
+		    print wc.repr()
