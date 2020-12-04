@@ -16,7 +16,6 @@ the emdrosapp_data repo.
 ## files
 
 * **emdros_application**: the Python 2.7 package providing all functionality for the programs listed below.
-* **hebrew_prosody**: a set of tools to analyse syllables and stress patterns in Biblical Hebrew. Experimental.
 * **template.py**: copy and edit this to write new Emdros-based applications.
 * **mqlc.py**: an interactive MQL query/command interpreter. 
 * **labelman.py**: a program to add descriptive labels to an Emdros database, based on 
@@ -25,6 +24,10 @@ the emdrosapp_data repo.
 * **unitman.py**: a program to combine low level textual objects into ever larger textual
     units.
 * **cp2unt.py**: a program that converts clause atom pairs into a hierarchy of textual units.
+
+* **hebrew_prosody**: a set of tools to analyse syllables and stress patterns in Biblical Hebrew. Experimental.
+* **hebscan.py**: a program to separate the text into syllables and assign word stresses.
+* **hebcountfeet.py**: counts rythmic feet within Hebrew half-verses and verses.
 
 ## database kernels
 All programs can work with various database families (having, e.g., different languages or database setups),
